@@ -15,6 +15,7 @@ import kotlin.math.ceil
 
 class MainActivity : AppCompatActivity() {
     private val dp: Float get() = resources.displayMetrics.density
+    private val prefs by lazy { getSharedPreferences("hasebat_prefs", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +52,9 @@ class MainActivity : AppCompatActivity() {
             "حاسبة مساحة الحوائط" to ::wallAreaCalculator,
             "حاسبة اللياسة" to ::plasterCalculator,
             "حاسبة الأسمنت والرمل" to ::mortarCalculator,
-            "حاسبة الخرسانة" to ::concreteCalculator
+            "حاسبة الخرسانة" to ::concreteCalculator,
+            "حاسبة تكلفة البناء" to ::costCalculator,
+            "أسعار البناء الليبية" to ::pricesDialog
         )
         calculators.forEach { (name, action) ->
             root.addView(Button(this).apply {
@@ -140,6 +143,32 @@ class MainActivity : AppCompatActivity() {
             val aggregate = volume * 0.8
             "حجم الخرسانة: ${fmt(volume)} م³\nالأسمنت التقريبي: ${fmt(cementBags)} كيس (50 كجم)\nالرمل التقريبي: ${fmt(sand)} م³\nالحصى التقريبي: ${fmt(aggregate)} م³\n\nهذه تقديرات أولية وليست خلطة تصميم هندسية."
         }
+    }
+
+    private fun costCalculator() {
+        val area = input("مساحة البناء بالمتر المربع")
+        val price = input("سعر بناء المتر المربع بالدينار الليبي", prefs.getString("build_price", "0") ?: "0")
+        showForm("حاسبة تكلفة البناء", listOf(area, price), "احسب") {
+            val total = value(area) * value(price)
+            require(total >= 0) { "تحقق من البيانات" }
+            prefs.edit().putString("last_cost", fmt(total)).apply()
+            "مساحة البناء: " + fmt(value(area)) + " م²\nسعر المتر: " + fmt(value(price)) + " د.ل\nالتكلفة التقديرية: " + fmt(total) + " د.ل"
+        }
+    }
+
+    private fun pricesDialog() {
+        val field = EditText(this).apply {
+            hint = "سعر بناء المتر المربع بالدينار الليبي"
+            setText(prefs.getString("build_price", ""))
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        AlertDialog.Builder(this).setTitle("أسعار البناء - Pro")
+            .setMessage("أدخل سعر المتر المربع حسب أسعار السوق المحلية.")
+            .setView(field)
+            .setPositiveButton("حفظ") { _, _ ->
+                prefs.edit().putString("build_price", field.text.toString()).apply()
+                Toast.makeText(this, "تم حفظ السعر", Toast.LENGTH_SHORT).show()
+            }.setNegativeButton("إلغاء", null).show()
     }
 
     private fun input(hint: String, default: String = ""): EditText = EditText(this).apply {
