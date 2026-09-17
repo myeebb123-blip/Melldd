@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         val thickness = input("سماكة اللياسة بالسنتيمتر", "1.5")
         val cementRatio = input("جزء الأسمنت في الخلطة", "1")
         val sandRatio = input("أجزاء الرمل في الخلطة", "4")
-        showForm("حاسبة اللياسة", listOf(area, height = thickness, cementRatio, sandRatio), "احسب") {
+        showForm("حاسبة اللياسة", listOf(area, thickness, cementRatio, sandRatio), "احسب") {
             materialResult(value(area), value(thickness), value(cementRatio), value(sandRatio))
         }
     }
