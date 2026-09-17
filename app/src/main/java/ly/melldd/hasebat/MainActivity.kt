@@ -32,13 +32,13 @@ class MainActivity : AppCompatActivity() {
             textSize = 28f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, d(8))
-        }, match(), wrap())
+        }, match())
         root.addView(TextView(this).apply {
             text = "حسابات سريعة للبلوك واللياسة والخرسانة والمواد"
             textSize = 16f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, d(20))
-        }, match(), wrap())
+        }, match())
 
         val calculators = listOf(
             "حاسبة البلوك" to ::blockCalculator,
@@ -52,14 +52,14 @@ class MainActivity : AppCompatActivity() {
                 text = name
                 textSize = 18f
                 setOnClickListener { action() }
-            }, match(), wrap())
+            }, match())
         }
         root.addView(TextView(this).apply {
             text = "ملاحظة: النتائج تقديرية للاستخدام الأولي، ويجب مراجعتها مع فني أو مهندس للمشاريع الإنشائية."
             textSize = 13f
             gravity = Gravity.CENTER
             setPadding(0, d(18), 0, 0)
-        }, match(), wrap())
+        }, match())
         setContentView(root)
     }
 
@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(d(20), d(4), d(20), 0)
             layoutDirection = LinearLayout.LAYOUT_DIRECTION_RTL
         }
-        fields.forEach { box.addView(it, match(), wrap()) }
+        fields.forEach { box.addView(it, match()) }
         AlertDialog.Builder(this)
             .setTitle(title)
             .setView(box)
@@ -175,5 +175,4 @@ class MainActivity : AppCompatActivity() {
     private fun fmt(v: Double): String = String.format(Locale.US, "%.2f", v)
     private fun d(v: Int): Int = (v * dp).toInt()
     private fun match() = LinearLayout.LayoutParams(-1, -2)
-    private fun wrap() = LinearLayout.LayoutParams(-1, -2)
 }
