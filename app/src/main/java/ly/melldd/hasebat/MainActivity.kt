@@ -6,6 +6,7 @@ import android.text.InputType
 import android.view.Gravity
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -24,9 +25,14 @@ class MainActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(d(20), d(42), d(20), d(24))
+            setPadding(d(20), d(24), d(20), d(24))
             layoutDirection = LinearLayout.LAYOUT_DIRECTION_RTL
         }
+        root.addView(ImageView(this).apply {
+            setImageResource(R.drawable.app_cover)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+        }, LinearLayout.LayoutParams(-1, d(220)))
         root.addView(TextView(this).apply {
             text = "حاسبة البناء الليبي"
             textSize = 28f
@@ -95,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         val thickness = input("سماكة اللياسة بالسنتيمتر", "1.5")
         val cementRatio = input("جزء الأسمنت في الخلطة", "1")
         val sandRatio = input("أجزاء الرمل في الخلطة", "4")
-        showForm("حاسبة اللياسة", listOf(area, thickness, cementRatio, sandRatio), "احسب") {
+        showForm("حاسبة اللياسة", listOf(area, height = thickness, cementRatio, sandRatio), "احسب") {
             materialResult(value(area), value(thickness), value(cementRatio), value(sandRatio))
         }
     }
