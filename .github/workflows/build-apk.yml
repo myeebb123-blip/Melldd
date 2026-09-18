@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Build Release APK and AAB
 
 on:
   workflow_dispatch:
@@ -23,8 +23,8 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
-      - name: Build release APK
-        run: gradle assembleRelease --no-daemon
+      - name: Build release APK and AAB
+        run: gradle assembleRelease bundleRelease --no-daemon
 
       - name: Validate signing secrets
         env:
@@ -45,7 +45,7 @@ jobs:
           echo "$KEYSTORE_B64" | base64 --decode > release-key.jks
           chmod 600 release-key.jks
 
-      - name: Sign release APK
+      - name: Sign release APK and AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -56,8 +56,14 @@ jobs:
           "$APKSIGNER" sign             --ks release-key.jks             --ks-pass env:KEYSTORE_PASSWORD             --key-pass env:KEY_PASSWORD             --ks-key-alias "$KEY_ALIAS"             --out app-release-signed.apk             app/build/outputs/apk/release/app-release-unsigned.apk
           "$APKSIGNER" verify --verbose app-release-signed.apk
 
-      - name: Upload signed APK
+          jarsigner             -keystore release-key.jks             -storepass "$KEYSTORE_PASSWORD"             -keypass "$KEY_PASSWORD"             -signedjar app-release-signed.aab             app/build/outputs/bundle/release/app-release.aab             "$KEY_ALIAS"
+
+          jarsigner -verify -verbose -certs app-release-signed.aab
+
+      - name: Upload Play Store bundle and signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: Hasebat-Al-Binaa-Release-Signed
-          path: app-release-signed.apk
+          name: Hasebat-Al-Binaa-Play-Release
+          path: |
+            app-release-signed.aab
+            app-release-signed.apk
