@@ -11,12 +11,17 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.android.billingclient.api.*
 import java.util.Locale
 import kotlin.math.ceil
 
 class MainActivity : AppCompatActivity() {
     private val dp: Float get() = resources.displayMetrics.density
     private val prefs by lazy { getSharedPreferences("hasebat_prefs", MODE_PRIVATE) }
+    private val productIds = listOf("pro_monthly", "pro_yearly")
+    private val productDetails = mutableMapOf<String, ProductDetails>()
+    private lateinit var billingClient: BillingClient
+    private var billingReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +87,57 @@ class MainActivity : AppCompatActivity() {
         setContentView(root)
     }
 
+    private fun setupBilling() {
+        billingClient = BillingClient.newBuilder(this)
+            .setListener { result, purchases ->
+                if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) purchases.forEach { handlePurchase(it) }
+            }
+            .enablePendingPurchases()
+            .build()
+        billingClient.startConnection(object : BillingClientStateListener {
+            override fun onBillingSetupFinished(result: BillingResult) {
+                billingReady = result.responseCode == BillingClient.BillingResponseCode.OK
+                if (billingReady) { queryProducts(); restorePurchases() }
+            }
+            override fun onBillingServiceDisconnected() { billingReady = false }
+        })
+    }
+
+    private fun queryProducts() {
+        if (!billingReady) return
+        val list = productIds.map { QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.SUBS).build() }
+        billingClient.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(list).build()) { result, details ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) details.productDetailsList.forEach { productDetails[it.productId] = it }
+        }
+    }
+
+    private fun buy(productId: String) {
+        val details = productDetails[productId] ?: run { queryProducts(); Toast.makeText(this, "المنتج غير متاح حاليًا في Google Play.", Toast.LENGTH_LONG).show(); return }
+        val offer = details.subscriptionOfferDetails?.firstOrNull() ?: return
+        val pd = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer.offerToken).build()
+        billingClient.launchBillingFlow(this, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(pd)).build())
+    }
+
+    private fun restorePurchases() {
+        if (!billingReady) return
+        billingClient.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { result, purchases ->
+            if (result.responseCode == BillingClient.BillingResponseCode.OK) purchases.forEach { handlePurchase(it) }
+        }
+    }
+
+    private fun handlePurchase(purchase: Purchase) {
+        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+            prefs.edit().putBoolean("pro_active", true).apply()
+            if (!purchase.isAcknowledged) billingClient.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()) { }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setupBilling()
+        showHome()
+    }
+
     private fun showProScreen() {
         val scroll = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -128,7 +184,6 @@ class MainActivity : AppCompatActivity() {
 
         addPlan(scroll, "شهري", "10 د.ل / شهر")
         addPlan(scroll, "سنوي", "80 د.ل / سنة")
-        addPlan(scroll, "مدى الحياة", "120 د.ل مرة واحدة")
 
         scroll.addView(Button(this).apply {
             text = "استعادة المشتريات"
@@ -168,13 +223,7 @@ class MainActivity : AppCompatActivity() {
         box.addView(Button(this).apply {
             text = "اشترك الآن"
             textSize = 16f
-            setOnClickListener {
-                Toast.makeText(
-                    this@MainActivity,
-                    "تم تجهيز واجهة الاشتراك. ربط الدفع الفعلي عبر Google Play Billing هو الخطوة التالية.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+            setOnClickListener { buy(productId) }
         }, LinearLayout.LayoutParams(-1, -2))
         parent.addView(box, match())
     }
