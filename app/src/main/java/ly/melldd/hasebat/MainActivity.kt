@@ -34,18 +34,26 @@ class MainActivity : AppCompatActivity() {
             setImageResource(R.drawable.app_cover)
             adjustViewBounds = true
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-        }, LinearLayout.LayoutParams(-1, d(220)))
+        }, LinearLayout.LayoutParams(-1, d(180)))
+
         root.addView(TextView(this).apply {
             text = "حاسبة البناء الليبي"
             textSize = 28f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, d(8))
         }, match())
+
         root.addView(TextView(this).apply {
             text = "حسابات سريعة للبلوك واللياسة والخرسانة والمواد"
             textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, d(20))
+            setPadding(0, 0, 0, d(14))
+        }, match())
+
+        root.addView(Button(this).apply {
+            text = "⭐ حاسبة البناء Pro"
+            textSize = 18f
+            setOnClickListener { showProScreen() }
         }, match())
 
         val calculators = listOf(
@@ -64,6 +72,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener { action() }
             }, match())
         }
+
         root.addView(TextView(this).apply {
             text = "ملاحظة: النتائج تقديرية للاستخدام الأولي، ويجب مراجعتها مع فني أو مهندس للمشاريع الإنشائية."
             textSize = 13f
@@ -71,6 +80,103 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, d(18), 0, 0)
         }, match())
         setContentView(root)
+    }
+
+    private fun showProScreen() {
+        val scroll = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(d(22), d(22), d(22), d(22))
+            layoutDirection = LinearLayout.LAYOUT_DIRECTION_RTL
+        }
+
+        scroll.addView(TextView(this).apply {
+            text = "⭐ حاسبة البناء Pro"
+            textSize = 30f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, d(8))
+        }, match())
+
+        scroll.addView(TextView(this).apply {
+            text = "كل أدوات البناء في مكان واحد، بدون إعلانات وبمزايا إضافية."
+            textSize = 17f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, d(20))
+        }, match())
+
+        val features = listOf(
+            "✓ إزالة الإعلانات",
+            "✓ حفظ المشاريع والحسابات",
+            "✓ إنشاء تقارير PDF",
+            "✓ سجل الحسابات السابقة",
+            "✓ أدوات وحاسبات متقدمة",
+            "✓ تحديثات ومزايا Pro مستقبلية"
+        )
+        features.forEach { feature ->
+            scroll.addView(TextView(this).apply {
+                text = feature
+                textSize = 17f
+                setPadding(d(8), d(9), d(8), d(9))
+            }, match())
+        }
+
+        scroll.addView(TextView(this).apply {
+            text = "اختر خطتك"
+            textSize = 22f
+            gravity = Gravity.CENTER
+            setPadding(0, d(20), 0, d(12))
+        }, match())
+
+        addPlan(scroll, "شهري", "10 د.ل / شهر")
+        addPlan(scroll, "سنوي", "80 د.ل / سنة")
+        addPlan(scroll, "مدى الحياة", "120 د.ل مرة واحدة")
+
+        scroll.addView(Button(this).apply {
+            text = "استعادة المشتريات"
+            textSize = 16f
+            setOnClickListener {
+                Toast.makeText(this@MainActivity, "سيتم ربط استعادة المشتريات مع Google Play Billing عند تفعيل الدفع.", Toast.LENGTH_LONG).show()
+            }
+        }, match())
+
+        scroll.addView(Button(this).apply {
+            text = "← العودة للرئيسية"
+            textSize = 16f
+            setOnClickListener { showHome() }
+        }, match())
+
+        setContentView(scroll)
+    }
+
+    private fun addPlan(parent: LinearLayout, name: String, price: String) {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(d(14), d(14), d(14), d(14))
+            layoutDirection = LinearLayout.LAYOUT_DIRECTION_RTL
+        }
+        box.addView(TextView(this).apply {
+            text = name
+            textSize = 20f
+            gravity = Gravity.CENTER
+        }, match())
+        box.addView(TextView(this).apply {
+            text = price
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setPadding(0, d(5), 0, d(8))
+        }, match())
+        box.addView(Button(this).apply {
+            text = "اشترك الآن"
+            textSize = 16f
+            setOnClickListener {
+                Toast.makeText(
+                    this@MainActivity,
+                    "تم تجهيز واجهة الاشتراك. ربط الدفع الفعلي عبر Google Play Billing هو الخطوة التالية.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }, LinearLayout.LayoutParams(-1, -2))
+        parent.addView(box, match())
     }
 
     private fun blockCalculator() {
