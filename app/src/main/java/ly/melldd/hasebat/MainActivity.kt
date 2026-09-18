@@ -182,15 +182,13 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, d(20), 0, d(12))
         }, match())
 
-        addPlan(scroll, "شهري", "10 د.ل / شهر")
-        addPlan(scroll, "سنوي", "80 د.ل / سنة")
+        addPlan(scroll, "شهري", "10 د.ل / شهر", "pro_monthly")
+        addPlan(scroll, "سنوي", "80 د.ل / سنة", "pro_yearly")
 
         scroll.addView(Button(this).apply {
             text = "استعادة المشتريات"
             textSize = 16f
-            setOnClickListener {
-                Toast.makeText(this@MainActivity, "سيتم ربط استعادة المشتريات مع Google Play Billing عند تفعيل الدفع.", Toast.LENGTH_LONG).show()
-            }
+            setOnClickListener { restorePurchases(); Toast.makeText(this@MainActivity, "تمت مزامنة المشتريات المتاحة.", Toast.LENGTH_SHORT).show() }
         }, match())
 
         scroll.addView(Button(this).apply {
@@ -202,7 +200,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(scroll)
     }
 
-    private fun addPlan(parent: LinearLayout, name: String, price: String) {
+    private fun addPlan(parent: LinearLayout, name: String, price: String, productId: String) {
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
