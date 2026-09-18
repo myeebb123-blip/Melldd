@@ -26,29 +26,34 @@ jobs:
       - name: Build release APK
         run: gradle assembleRelease --no-daemon
 
-      - name: Create temporary signing key
+      - name: Validate signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
-          keytool -genkeypair \
-            -keystore release-key.jks \
-            -alias release \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass changeit \
-            -keypass changeit \
-            -dname "CN=Hasebat Al Binaa, OU=App, O=Melldd, L=Sirte, ST=Libya, C=LY"
+          test -n "$KEYSTORE_B64" || (echo "Missing RELEASE_KEYSTORE_B64" && exit 1)
+          test -n "$KEYSTORE_PASSWORD" || (echo "Missing RELEASE_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$KEY_ALIAS" || (echo "Missing RELEASE_KEY_ALIAS" && exit 1)
+          test -n "$KEY_PASSWORD" || (echo "Missing RELEASE_KEY_PASSWORD" && exit 1)
+
+      - name: Restore persistent signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > release-key.jks
+          chmod 600 release-key.jks
 
       - name: Sign release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           APKSIGNER=$(find "$SDK_ROOT/build-tools" -name apksigner -type f | sort -V | tail -1)
-          "$APKSIGNER" sign \
-            --ks release-key.jks \
-            --ks-pass pass:changeit \
-            --key-pass pass:changeit \
-            --ks-key-alias release \
-            --out app-release-signed.apk \
-            app/build/outputs/apk/release/app-release-unsigned.apk
+          "$APKSIGNER" sign             --ks release-key.jks             --ks-pass env:KEYSTORE_PASSWORD             --key-pass env:KEY_PASSWORD             --ks-key-alias "$KEY_ALIAS"             --out app-release-signed.apk             app/build/outputs/apk/release/app-release-unsigned.apk
           "$APKSIGNER" verify --verbose app-release-signed.apk
 
       - name: Upload signed APK
