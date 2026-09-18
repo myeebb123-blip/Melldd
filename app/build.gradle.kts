@@ -11,8 +11,8 @@ android {
         applicationId = "ly.melldd.hasebat"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "2.2.0"
+        versionCode = 5
+        versionName = "2.3.0"
     }
 
     compileOptions {
@@ -29,4 +29,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.android.billingclient:billing-ktx:9.1.0")
 }
